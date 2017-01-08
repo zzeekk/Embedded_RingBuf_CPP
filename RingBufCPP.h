@@ -23,7 +23,7 @@ RingBufCPP()
 *  Add element obj to the buffer
 * Return: true on success
 */
-bool add(const Type &obj)
+bool add(Type &obj)
 {
     bool ret = false;
     RB_ATOMIC_START
@@ -66,12 +66,30 @@ bool pull(Type *dest)
     return ret;
 }
 
+/**
+* Remove last element from buffer, and copy it to dest
+* If buffer is empty, wait until new entry appears or timeout reached.
+* Return: true on success
+*/
+bool pull(Type *dest, unsigned int timeout)
+{
+	_startMillis = millis();
+    do {
+        if(pull(dest)) return true;
+        yield();
+    } while(millis() - _startMillis < timeout);
+    return false;     // timeout reached
+}
+
+void clear() {
+	_numElements = 0;
+}
 
 /**
 * Peek at num'th element in the buffer
 * Return: a pointer to the num'th element
 */
-Type* peek(size_t num) const
+Type* peek(size_t num)
 {
     Type *ret = NULL;
 
@@ -89,7 +107,7 @@ Type* peek(size_t num) const
 /**
 * Return: true if buffer is full
 */
-bool isFull() const
+bool isFull()
 {
     bool ret;
 
@@ -106,7 +124,7 @@ bool isFull() const
 /**
 * Return: number of elements in buffer
 */
-size_t numElements() const
+size_t numElements()
 {
     size_t ret;
 
@@ -123,7 +141,7 @@ size_t numElements() const
 /**
 * Return: true if buffer is empty
 */
-bool isEmpty() const
+bool isEmpty()
 {
     bool ret;
 
@@ -141,7 +159,7 @@ protected:
 * Calculates the index in the array of the oldest element
 * Return: index in array of element
 */
-size_t getTail() const
+size_t getTail()
 {
     return (_head + (MaxElements - _numElements))%MaxElements;
 }
@@ -153,6 +171,7 @@ Type _buf[MaxElements];
 size_t _head;
 size_t _numElements;
 private:
+unsigned long _startMillis;
 
 };
 
