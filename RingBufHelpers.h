@@ -36,6 +36,10 @@
         #define RB_ATOMIC_START do { uint32_t _savedIS = xt_rsil(15) ;
         #define RB_ATOMIC_END xt_wsr_ps(_savedIS); } while(0);
 
+    #elif defined(ARDUINO_ARCH_ESP32)
+        #define RB_ATOMIC_START do { uint32_t _savedIS = XTOS_DISABLE_LOWPRI_INTERRUPTS ;
+        #define RB_ATOMIC_END XTOS_RESTORE_INTLEVEL(_savedIS); } while(0);
+
     #else
         #define RB_ATOMIC_START {
         #define RB_ATOMIC_END }
